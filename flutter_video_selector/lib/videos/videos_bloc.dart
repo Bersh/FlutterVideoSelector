@@ -3,6 +3,7 @@ import 'dart:io';
 
 import 'package:bloc/bloc.dart';
 import 'package:meta/meta.dart';
+import 'package:video_player/video_player.dart';
 
 part 'videos_event.dart';
 
@@ -18,6 +19,8 @@ class VideosBloc extends Bloc<VideosEvent, VideosState> {
     if (event is AddVideoEvent) {
       videos.add(event.videoFile);
       yield ListVideosState(videos);
+    } else if (event is PlayVideoEvent) {
+      yield PlayVideoState();
     }
   }
 }

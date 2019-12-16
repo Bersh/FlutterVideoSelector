@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:flutter_video_selector/videos/videos_bloc.dart';
 import 'package:image_picker/image_picker.dart';
+import 'package:video_player/video_player.dart';
 
 void main() => runApp(MyApp());
 
@@ -50,6 +51,16 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
   VideosBloc _bloc = VideosBloc();
+  VideoPlayerController _controller;
+
+  @override
+  void dispose() {
+    if (_controller != null) {
+      _controller.dispose();
+    }
+
+    super.dispose();
+  }
 
   Future _pickVideo() async {
     var videoFile = await ImagePicker.pickVideo(source: ImageSource.gallery);
@@ -62,7 +73,7 @@ class _MyHomePageState extends State<MyHomePage> {
       appBar: AppBar(
         title: Text(widget.title),
       ),
-      body:_buildPage(context),
+      body: _buildPage(context),
       floatingActionButton: FloatingActionButton(
         onPressed: _pickVideo,
         tooltip: 'Select video',
@@ -86,34 +97,44 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Widget _buildListPage(List<File> files) {
     return Center(
-        child:ListView.builder(
-          itemCount: files.length,
-          itemBuilder: (BuildContext context, int index) {
-            return Card(
-                child: ListTile(
-                  title: Text((files[index].path)),
-                  onTap: () {
-                    //todo
-/*                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                        builder: (context) => DetailScreen(_repos[index])),
-                  );*/
-                  },
-                ));
+        child: ListView.builder(
+      itemCount: files.length,
+      itemBuilder: (BuildContext context, int index) {
+        return Card(
+            child: ListTile(
+          title: Text((files[index].path)),
+          onTap: () {
+            _controller = VideoPlayerController.file(files[index]);
+            _controller
+              ..initialize().then((_) {
+                _bloc.add(PlayVideoEvent());
+                _controller.play();
+              });
           },
-        )
-    );
+        ));
+      },
+    ));
   }
 
   Widget _buildPage(BuildContext context) {
     return BlocBuilder(
       bloc: _bloc,
       builder: (BuildContext context, VideosState state) {
+        if (!(state is PlayVideoState) && _controller != null) {
+          _controller.pause();
+          _controller.dispose();
+          _controller = null;
+        }
+
         if (state is InitialVideosState) {
           return _buildEmptyPage();
         } else if (state is ListVideosState) {
           return _buildListPage(state.videos);
+        } else if (state is PlayVideoState) {
+          return AspectRatio(
+            aspectRatio: _controller.value.aspectRatio,
+            child: VideoPlayer(_controller),
+          );
         }
         return _buildEmptyPage();
       },
