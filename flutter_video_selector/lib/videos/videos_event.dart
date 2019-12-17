@@ -8,7 +8,3 @@ class AddVideoEvent extends VideosEvent {
 
   AddVideoEvent(this.videoFile);
 }
-
-class PlayVideoEvent extends VideosEvent {
-  PlayVideoEvent();
-}

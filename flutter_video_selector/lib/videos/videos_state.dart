@@ -10,7 +10,3 @@ class ListVideosState extends VideosState {
 
   ListVideosState(this.videos);
 }
-
-class PlayVideoState extends VideosState {
-  PlayVideoState();
-}
